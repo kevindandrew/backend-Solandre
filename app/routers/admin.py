@@ -290,8 +290,7 @@ def crear_plato(
     nuevo_plato = Plato(
         nombre=request.nombre,
         descripcion=request.descripcion,
-        tipo=request.tipo,
-        imagen_url=request.imagen_url
+        tipo=request.tipo
     )
 
     db.add(nuevo_plato)
@@ -352,7 +351,6 @@ def actualizar_plato(
     plato.nombre = request.nombre
     plato.descripcion = request.descripcion
     plato.tipo = request.tipo
-    plato.imagen_url = request.imagen_url
 
     # Actualizar ingredientes (eliminar los actuales y agregar los nuevos)
     if request.ingredientes:

@@ -62,7 +62,6 @@ class CrearPlatoRequest(BaseModel):
         None, max_length=500, description="Descripción del plato")
     tipo: TipoPlato = Field(...,
                             description="Tipo de plato (Principal, Entrada, Postre, Bebida)")
-    imagen_url: Optional[str] = Field(None, description="URL de la imagen")
     ingredientes: List[IngredienteEnPlatoRequest] = Field(
         default_factory=list,
         description="Lista de ingredientes del plato"
@@ -75,7 +74,6 @@ class PlatoResponse(BaseModel):
     nombre: str
     descripcion: Optional[str]
     tipo: TipoPlato
-    imagen_url: Optional[str]
 
     model_config = ConfigDict(from_attributes=True)
 
