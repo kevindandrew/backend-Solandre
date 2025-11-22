@@ -31,7 +31,7 @@ class PlatoCompletoResponse(BaseModel):
     nombre: str
     descripcion: Optional[str]
     tipo: TipoPlato
-    imagen_url: Optional[str]
+    imagen_url: Optional[str] = None
 
     class Config:
         from_attributes = True
