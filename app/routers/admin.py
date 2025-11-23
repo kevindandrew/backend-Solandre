@@ -62,33 +62,40 @@ def crear_menu_dia(
     """
     verificar_admin(current_user)
 
-    # Verificar que el plato existe
-    plato = db.query(Plato).filter(Plato.plato_id == request.plato_id).first()
-    if not plato:
+    # Verificar que los 3 platos existen
+    plato_principal = db.query(Plato).filter(
+        Plato.plato_id == request.plato_principal_id).first()
+    bebida = db.query(Plato).filter(
+        Plato.plato_id == request.bebida_id).first()
+    postre = db.query(Plato).filter(
+        Plato.plato_id == request.postre_id).first()
+
+    if not plato_principal or not bebida or not postre:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Plato no encontrado"
+            detail="Uno o más platos no encontrados"
         )
 
-    # Verificar que no exista ya un menú para esa fecha y plato
+    # Verificar que no exista ya un menú para esa fecha
     menu_existente = db.query(MenuDia).filter(
-        MenuDia.fecha == request.fecha,
-        MenuDia.plato_id == request.plato_id
+        MenuDia.fecha == request.fecha
     ).first()
 
     if menu_existente:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Ya existe un menú para el plato '{plato.nombre}' en la fecha {request.fecha}"
+            detail=f"Ya existe un menú para la fecha {request.fecha}"
         )
 
     # Crear el menú
     nuevo_menu = MenuDia(
         fecha=request.fecha,
-        plato_id=request.plato_id,
+        plato_principal_id=request.plato_principal_id,
+        bebida_id=request.bebida_id,
+        postre_id=request.postre_id,
+        info_nutricional=request.info_nutricional,
         cantidad_disponible=request.cantidad_disponible,
         precio_menu=request.precio_menu,
-        precio_menu_delivery=request.precio_menu_delivery,
         publicado=request.publicado
     )
 
@@ -96,16 +103,7 @@ def crear_menu_dia(
     db.commit()
     db.refresh(nuevo_menu)
 
-    return MenuResponse(
-        menu_dia_id=nuevo_menu.menu_dia_id,
-        fecha=nuevo_menu.fecha,
-        plato_id=nuevo_menu.plato_id,
-        plato_nombre=plato.nombre,
-        cantidad_disponible=nuevo_menu.cantidad_disponible,
-        precio_menu=nuevo_menu.precio_menu,
-        precio_menu_delivery=nuevo_menu.precio_menu_delivery,
-        publicado=nuevo_menu.publicado
-    )
+    return MenuResponse.from_orm(nuevo_menu)
 
 
 @router.put("/menu/{menu_id}", response_model=MenuResponse)
@@ -136,28 +134,13 @@ def actualizar_menu_dia(
     if request.precio_menu is not None:
         menu.precio_menu = request.precio_menu
 
-    if request.precio_menu_delivery is not None:
-        menu.precio_menu_delivery = request.precio_menu_delivery
-
     if request.publicado is not None:
         menu.publicado = request.publicado
 
     db.commit()
     db.refresh(menu)
 
-    # Obtener nombre del plato
-    plato = db.query(Plato).filter(Plato.plato_id == menu.plato_id).first()
-
-    return MenuResponse(
-        menu_dia_id=menu.menu_dia_id,
-        fecha=menu.fecha,
-        plato_id=menu.plato_id,
-        plato_nombre=plato.nombre if plato else "Desconocido",
-        cantidad_disponible=menu.cantidad_disponible,
-        precio_menu=menu.precio_menu,
-        precio_menu_delivery=menu.precio_menu_delivery,
-        publicado=menu.publicado
-    )
+    return MenuResponse.from_orm(menu)
 
 
 @router.get("/menu", response_model=List[MenuResponse])
@@ -194,21 +177,7 @@ def listar_menus(
     # Ordenar por fecha
     menus = query.order_by(MenuDia.fecha.desc()).all()
 
-    resultado = []
-    for menu in menus:
-        plato = db.query(Plato).filter(Plato.plato_id == menu.plato_id).first()
-        resultado.append(MenuResponse(
-            menu_dia_id=menu.menu_dia_id,
-            fecha=menu.fecha,
-            plato_id=menu.plato_id,
-            plato_nombre=plato.nombre if plato else "Desconocido",
-            cantidad_disponible=menu.cantidad_disponible,
-            precio_menu=menu.precio_menu,
-            precio_menu_delivery=menu.precio_menu_delivery,
-            publicado=menu.publicado
-        ))
-
-    return resultado
+    return [MenuResponse.from_orm(menu) for menu in menus]
 
 
 @router.delete("/menu/{menu_id}")

@@ -11,11 +11,13 @@ from app.models.enums import TipoPlato, EstadoDelPedido, MetodoPago
 class CrearMenuRequest(BaseModel):
     """Request para crear un menú del día"""
     fecha: date = Field(..., description="Fecha del menú")
-    plato_id: int = Field(..., description="ID del plato")
+    plato_principal_id: int = Field(..., description="ID del plato principal")
+    bebida_id: int = Field(..., description="ID de la bebida")
+    postre_id: int = Field(..., description="ID del postre")
+    info_nutricional: Optional[str] = Field(
+        None, description="Información nutricional")
     cantidad_disponible: int = Field(..., gt=0, description="Stock inicial")
     precio_menu: Decimal = Field(..., gt=0, description="Precio del menú")
-    precio_menu_delivery: Decimal = Field(...,
-                                          gt=0, description="Precio con delivery")
     publicado: bool = Field(
         default=False, description="Si está visible para clientes")
 
@@ -26,8 +28,6 @@ class ActualizarMenuRequest(BaseModel):
         None, ge=0, description="Nuevo stock")
     precio_menu: Optional[Decimal] = Field(
         None, gt=0, description="Nuevo precio")
-    precio_menu_delivery: Optional[Decimal] = Field(
-        None, gt=0, description="Nuevo precio delivery")
     publicado: Optional[bool] = Field(None, description="Cambiar visibilidad")
 
 
@@ -35,11 +35,11 @@ class MenuResponse(BaseModel):
     """Response de un menú del día"""
     menu_dia_id: int
     fecha: date
-    plato_id: int
-    plato_nombre: str
+    plato_principal_id: int
+    bebida_id: int
+    postre_id: int
     cantidad_disponible: int
     precio_menu: Decimal
-    precio_menu_delivery: Decimal
     publicado: bool
 
     model_config = ConfigDict(from_attributes=True)
@@ -81,24 +81,18 @@ class PlatoResponse(BaseModel):
 # ========== INGREDIENTES ==========
 
 class CrearIngredienteRequest(BaseModel):
-    """Request para crear un nuevo ingrediente"""
+    """Request para crear un ingrediente"""
     nombre: str = Field(..., min_length=1, max_length=100,
                         description="Nombre del ingrediente")
-    unidad_medida: str = Field(..., min_length=1, max_length=20,
-                               description="Unidad (kg, g, L, ml, unidades)")
     stock_actual: Decimal = Field(default=Decimal(
         "0"), ge=0, description="Stock inicial")
-    stock_minimo: Decimal = Field(default=Decimal(
-        "0"), ge=0, description="Stock mínimo para alertas")
 
 
 class IngredienteResponse(BaseModel):
     """Response de un ingrediente"""
     ingrediente_id: int
     nombre: str
-    unidad_medida: str
-    stock_actual: Decimal
-    stock_minimo: Decimal
+    stock_actual: Optional[Decimal] = None
 
     model_config = ConfigDict(from_attributes=True)
 
