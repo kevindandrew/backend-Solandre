@@ -100,14 +100,15 @@ class IngredienteResponse(BaseModel):
 # ========== GESTIÓN DE PERSONAL ==========
 
 class CrearEmpleadoRequest(BaseModel):
-    """Request para crear un empleado (Cocina o Delivery)"""
+    """Request para crear un empleado (Admin, Cocina o Delivery)"""
     email: str = Field(..., description="Email del empleado")
     password: str = Field(..., min_length=6, description="Contraseña")
     nombre_completo: str = Field(..., min_length=1,
                                  max_length=100, description="Nombre completo")
     telefono: Optional[str] = Field(
         None, max_length=20, description="Teléfono")
-    rol_id: int = Field(..., description="ID del rol (2=Cocina, 3=Delivery)")
+    rol_id: int = Field(...,
+                        description="ID del rol (1=Admin, 2=Cocina, 3=Delivery)")
     zona_reparto_id: Optional[int] = Field(
         None, description="ID de zona para Delivery")
 
@@ -179,3 +180,25 @@ class KPIsResponse(BaseModel):
     pedidos_mas_lentos: List[dict] = Field(
         default_factory=list, description="Top 5 pedidos más lentos"
     )
+
+
+# ========== GESTIÓN DE ZONAS ==========
+
+class CrearZonaRequest(BaseModel):
+    """Request para crear una zona de delivery"""
+    nombre_zona: str = Field(..., min_length=1, max_length=100,
+                             description="Nombre de la zona")
+
+
+class ActualizarZonaRequest(BaseModel):
+    """Request para actualizar una zona de delivery"""
+    nombre_zona: str = Field(..., min_length=1, max_length=100,
+                             description="Nuevo nombre de la zona")
+
+
+class ZonaResponse(BaseModel):
+    """Response de una zona de delivery"""
+    zona_id: int
+    nombre_zona: str
+
+    model_config = ConfigDict(from_attributes=True)

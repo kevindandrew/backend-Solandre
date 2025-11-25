@@ -27,7 +27,10 @@ from app.schemas.admin import (
     EmpleadoResponse,
     PedidoDashboardResponse,
     ReasignarDeliveryRequest,
-    KPIsResponse
+    KPIsResponse,
+    CrearZonaRequest,
+    ActualizarZonaRequest,
+    ZonaResponse
 )
 from app.utils.dependencies import get_current_user
 from app.utils.security import get_password_hash
@@ -481,18 +484,24 @@ def ingredientes_bajo_stock(
     current_user: Usuario = Depends(get_current_user)
 ):
     """
-    Lista ingredientes con stock actual menor al stock mínimo.
-    Útil para alertas de reabastecimiento.
+    Lista ingredientes con stock bajo.
+
+    NOTA: El modelo Ingrediente no tiene campo stock_minimo en la BD,
+    por lo que este endpoint devuelve una lista vacía.
+    Para activarlo, agrega el campo stock_minimo a la tabla ingredientes.
+
     Solo administradores.
     """
     verificar_admin(current_user)
 
-    # Filtrar ingredientes donde stock_actual < stock_minimo
-    ingredientes = db.query(Ingrediente).filter(
-        Ingrediente.stock_actual < Ingrediente.stock_minimo
-    ).all()
+    # Como no existe stock_minimo en la BD, devuelve lista vacía
+    # Si en el futuro agregas stock_minimo a la tabla, descomenta esto:
+    # ingredientes = db.query(Ingrediente).filter(
+    #     Ingrediente.stock_actual < Ingrediente.stock_minimo
+    # ).all()
+    # return [IngredienteResponse.from_orm(i) for i in ingredientes]
 
-    return [IngredienteResponse.from_orm(i) for i in ingredientes]
+    return []
 
 
 # ========== GESTIÓN DE PERSONAL ==========
@@ -510,11 +519,12 @@ def crear_empleado(
     """
     verificar_admin(current_user)
 
-    # Validar que el rol sea Cocina (2) o Delivery (3)
-    if request.rol_id not in [2, 3]:
+    # Validar que el rol sea Admin (1), Cocina (2) o Delivery (3)
+    # No se permite crear clientes (4) desde este endpoint
+    if request.rol_id not in [1, 2, 3]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Solo se pueden crear empleados con rol Cocina (2) o Delivery (3)"
+            detail="Solo se pueden crear empleados con rol Admin (1), Cocina (2) o Delivery (3)"
         )
 
     # Verificar que el rol existe
@@ -1292,3 +1302,166 @@ def obtener_detalle_completo_pedido(
         "fecha_en_reparto": pedido.fecha_en_reparto.isoformat() if pedido.fecha_en_reparto else None,
         "fecha_entrega": pedido.fecha_entrega.isoformat() if pedido.fecha_entrega else None
     }
+
+
+# ========== GESTIÓN DE ZONAS DE DELIVERY ==========
+
+@router.post("/zonas", response_model=ZonaResponse, status_code=status.HTTP_201_CREATED)
+def crear_zona(
+    request: CrearZonaRequest,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Crea una nueva zona de delivery.
+    Solo administradores.
+    """
+    verificar_admin(current_user)
+
+    # Verificar que no exista una zona con ese nombre
+    zona_existente = db.query(ZonaDelivery).filter(
+        ZonaDelivery.nombre_zona == request.nombre_zona
+    ).first()
+
+    if zona_existente:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Ya existe una zona con el nombre '{request.nombre_zona}'"
+        )
+
+    # Crear la zona
+    nueva_zona = ZonaDelivery(
+        nombre_zona=request.nombre_zona
+    )
+
+    db.add(nueva_zona)
+    db.commit()
+    db.refresh(nueva_zona)
+
+    return ZonaResponse.from_orm(nueva_zona)
+
+
+@router.get("/zonas", response_model=List[ZonaResponse])
+def listar_zonas(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Lista todas las zonas de delivery.
+    Solo administradores.
+    """
+    verificar_admin(current_user)
+
+    zonas = db.query(ZonaDelivery).order_by(ZonaDelivery.nombre_zona).all()
+    return [ZonaResponse.from_orm(z) for z in zonas]
+
+
+@router.get("/zonas/{zona_id}", response_model=ZonaResponse)
+def obtener_zona(
+    zona_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Obtiene una zona de delivery por ID.
+    Solo administradores.
+    """
+    verificar_admin(current_user)
+
+    zona = db.query(ZonaDelivery).filter(
+        ZonaDelivery.zona_id == zona_id).first()
+    if not zona:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Zona no encontrada"
+        )
+
+    return ZonaResponse.from_orm(zona)
+
+
+@router.put("/zonas/{zona_id}", response_model=ZonaResponse)
+def actualizar_zona(
+    zona_id: int,
+    request: ActualizarZonaRequest,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Actualiza el nombre de una zona de delivery.
+    Solo administradores.
+    """
+    verificar_admin(current_user)
+
+    # Buscar la zona
+    zona = db.query(ZonaDelivery).filter(
+        ZonaDelivery.zona_id == zona_id).first()
+    if not zona:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Zona no encontrada"
+        )
+
+    # Verificar que no exista otra zona con ese nombre
+    zona_existente = db.query(ZonaDelivery).filter(
+        ZonaDelivery.nombre_zona == request.nombre_zona,
+        ZonaDelivery.zona_id != zona_id
+    ).first()
+
+    if zona_existente:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Ya existe otra zona con el nombre '{request.nombre_zona}'"
+        )
+
+    # Actualizar el nombre
+    zona.nombre_zona = request.nombre_zona
+    db.commit()
+    db.refresh(zona)
+
+    return ZonaResponse.from_orm(zona)
+
+
+@router.delete("/zonas/{zona_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_zona(
+    zona_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Elimina una zona de delivery si no tiene pedidos ni deliveries asignados.
+    Solo administradores.
+    """
+    verificar_admin(current_user)
+
+    # Buscar la zona
+    zona = db.query(ZonaDelivery).filter(
+        ZonaDelivery.zona_id == zona_id).first()
+    if not zona:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Zona no encontrada"
+        )
+
+    # Verificar que no tenga pedidos asociados
+    pedidos_count = db.query(Pedido).filter(Pedido.zona_id == zona_id).count()
+    if pedidos_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"No se puede eliminar la zona porque tiene {pedidos_count} pedidos asociados"
+        )
+
+    # Verificar que no tenga deliveries asignados
+    deliveries_count = db.query(Usuario).filter(
+        Usuario.zona_reparto_id == zona_id
+    ).count()
+    if deliveries_count > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"No se puede eliminar la zona porque tiene {deliveries_count} deliveries asignados"
+        )
+
+    # Eliminar la zona
+    db.delete(zona)
+    db.commit()
+
+    return None

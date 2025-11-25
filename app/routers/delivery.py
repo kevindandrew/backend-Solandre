@@ -39,10 +39,10 @@ def obtener_mis_entregas(
     Incluye link de Google Maps y toda la info necesaria para la entrega.
     """
     # Verificar que el usuario sea delivery
-    if current_user.rol_id != 3:  # 3 = Delivery
+    if current_user.rol_id not in [1, 3]:  # 1 = Admin, 3 = Delivery
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo los delivery pueden acceder a esta sección"
+            detail="Solo los administradores y deliveries pueden acceder a esta sección"
         )
 
     # Obtener pedidos asignados al delivery
@@ -112,11 +112,11 @@ def tomar_pedido(
     Marca que el delivery ya recogió el paquete de cocina.
     Cambia el estado a "En Reparto" y actualiza fecha_en_reparto.
     """
-    # Verificar que el usuario sea delivery
-    if current_user.rol_id != 3:  # 3 = Delivery
+    # Verificar que el usuario sea delivery o admin
+    if current_user.rol_id not in [1, 3]:  # 1 = Admin, 3 = Delivery
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo los delivery pueden realizar esta acción"
+            detail="Solo los administradores y deliveries pueden entregar pedidos"
         )
 
     # Buscar pedido

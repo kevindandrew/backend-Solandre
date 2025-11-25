@@ -174,10 +174,10 @@ def obtener_mis_asignaciones_delivery(
     Solo accesible por usuarios con rol Delivery (3).
     """
     # Verificar permisos
-    if current_user.rol_id != 3:
+    if current_user.rol_id not in [1, 3]:  # 1 = Admin, 3 = Delivery
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo delivery puede acceder a este endpoint"
+            detail="Solo administradores y delivery pueden acceder a este endpoint"
         )
 
     desde = datetime.now() - timedelta(minutes=desde_minutos)
@@ -221,10 +221,10 @@ def notificar_llegada_delivery(
     Solo accesible por usuarios con rol Delivery (3).
     """
     # Verificar permisos
-    if current_user.rol_id != 3:
+    if current_user.rol_id not in [1, 3]:  # 1 = Admin, 3 = Delivery
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo delivery puede usar este endpoint"
+            detail="Solo administradores y delivery pueden notificar llegadas"
         )
 
     # Buscar el pedido
@@ -272,10 +272,10 @@ def obtener_notificaciones_mis_pedidos(
     Solo accesible por usuarios con rol Cliente (4).
     """
     # Verificar permisos
-    if current_user.rol_id != 4:
+    if current_user.rol_id not in [1, 4]:  # 1 = Admin, 4 = Cliente
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo clientes pueden acceder a este endpoint"
+            detail="Solo administradores y clientes pueden acceder a este endpoint"
         )
 
     desde = datetime.now() - timedelta(minutes=desde_minutos)
