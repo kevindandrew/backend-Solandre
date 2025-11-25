@@ -21,3 +21,4 @@ class TipoPlato(str, Enum):
 class MetodoPago(str, Enum):
     EFECTIVO = "Efectivo"
     QR = "QR"
+    TRANSFERENCIA = "Transferencia"

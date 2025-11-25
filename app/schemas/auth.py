@@ -14,6 +14,8 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=6, max_length=100)
     telefono: Optional[str] = Field(None, max_length=20)
+    zona_defecto_id: Optional[int] = Field(None, description="ID de zona por defecto")
+    direccion_defecto: Optional[str] = Field(None, description="Dirección por defecto")
 
 
 class TokenResponse(BaseModel):
@@ -34,6 +36,8 @@ class UserResponse(BaseModel):
     telefono: Optional[str]
     rol_id: int
     nombre_rol: str
+    zona_defecto_id: Optional[int] = None
+    direccion_defecto: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -43,6 +47,8 @@ class ActualizarPerfilRequest(BaseModel):
     """Schema para actualizar el perfil del usuario"""
     nombre_completo: Optional[str] = Field(None, min_length=2, max_length=100)
     telefono: Optional[str] = Field(None, max_length=20)
+    zona_defecto_id: Optional[int] = Field(None, description="ID de zona por defecto")
+    direccion_defecto: Optional[str] = Field(None, description="Dirección por defecto")
 
 
 class CambiarPasswordRequest(BaseModel):

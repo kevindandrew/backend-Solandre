@@ -68,16 +68,32 @@ def crear_menu_dia(
     # Verificar que los 3 platos existen
     plato_principal = db.query(Plato).filter(
         Plato.plato_id == request.plato_principal_id).first()
-    bebida = db.query(Plato).filter(
-        Plato.plato_id == request.bebida_id).first()
-    postre = db.query(Plato).filter(
-        Plato.plato_id == request.postre_id).first()
-
-    if not plato_principal or not bebida or not postre:
+    
+    if not plato_principal:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Uno o más platos no encontrados"
+            detail="Plato principal no encontrado"
         )
+
+    # Validar bebida si se proporciona
+    if request.bebida_id:
+        bebida = db.query(Plato).filter(
+            Plato.plato_id == request.bebida_id).first()
+        if not bebida:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bebida no encontrada"
+            )
+
+    # Validar postre si se proporciona
+    if request.postre_id:
+        postre = db.query(Plato).filter(
+            Plato.plato_id == request.postre_id).first()
+        if not postre:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Postre no encontrado"
+            )
 
     # Verificar que no exista ya un menú para esa fecha
     menu_existente = db.query(MenuDia).filter(
@@ -99,6 +115,7 @@ def crear_menu_dia(
         info_nutricional=request.info_nutricional,
         cantidad_disponible=request.cantidad_disponible,
         precio_menu=request.precio_menu,
+        imagen_url=request.imagen_url,
         publicado=request.publicado
     )
 
@@ -262,6 +279,7 @@ def crear_plato(
     nuevo_plato = Plato(
         nombre=request.nombre,
         descripcion=request.descripcion,
+        imagen_url=request.imagen_url,
         tipo=request.tipo
     )
 
@@ -322,6 +340,7 @@ def actualizar_plato(
     # Actualizar campos
     plato.nombre = request.nombre
     plato.descripcion = request.descripcion
+    plato.imagen_url = request.imagen_url
     plato.tipo = request.tipo
 
     # Actualizar ingredientes (eliminar los actuales y agregar los nuevos)

@@ -12,11 +12,12 @@ class CrearMenuRequest(BaseModel):
     """Request para crear un menú del día"""
     fecha: date = Field(..., description="Fecha del menú")
     plato_principal_id: int = Field(..., description="ID del plato principal")
-    bebida_id: int = Field(..., description="ID de la bebida")
-    postre_id: int = Field(..., description="ID del postre")
+    bebida_id: Optional[int] = Field(None, description="ID de la bebida")
+    postre_id: Optional[int] = Field(None, description="ID del postre")
     info_nutricional: Optional[str] = Field(
         None, description="Información nutricional")
-    cantidad_disponible: int = Field(..., gt=0, description="Stock inicial")
+    imagen_url: str = Field(..., description="URL de la imagen del menú")
+    cantidad_disponible: int = Field(50, gt=0, description="Stock inicial")
     precio_menu: Decimal = Field(..., gt=0, description="Precio del menú")
     publicado: bool = Field(
         default=False, description="Si está visible para clientes")
@@ -36,10 +37,11 @@ class MenuResponse(BaseModel):
     menu_dia_id: int
     fecha: date
     plato_principal_id: int
-    bebida_id: int
-    postre_id: int
+    bebida_id: Optional[int]
+    postre_id: Optional[int]
     cantidad_disponible: int
     precio_menu: Decimal
+    imagen_url: str
     publicado: bool
 
     model_config = ConfigDict(from_attributes=True)
@@ -58,6 +60,7 @@ class CrearPlatoRequest(BaseModel):
     """Request para crear un nuevo plato"""
     nombre: str = Field(..., min_length=1, max_length=100,
                         description="Nombre del plato")
+    imagen_url: str = Field(..., description="URL de la imagen del plato")
     descripcion: Optional[str] = Field(
         None, max_length=500, description="Descripción del plato")
     tipo: TipoPlato = Field(...,
@@ -72,6 +75,7 @@ class PlatoResponse(BaseModel):
     """Response de un plato"""
     plato_id: int
     nombre: str
+    imagen_url: str
     descripcion: Optional[str]
     tipo: TipoPlato
 
@@ -188,6 +192,8 @@ class CrearZonaRequest(BaseModel):
     """Request para crear una zona de delivery"""
     nombre_zona: str = Field(..., min_length=1, max_length=100,
                              description="Nombre de la zona")
+    costo_envio: Decimal = Field(default=Decimal("0.00"), ge=0,
+                                 description="Costo de envío")
 
 
 class ActualizarZonaRequest(BaseModel):
@@ -200,5 +206,6 @@ class ZonaResponse(BaseModel):
     """Response de una zona de delivery"""
     zona_id: int
     nombre_zona: str
+    costo_envio: Decimal
 
     model_config = ConfigDict(from_attributes=True)

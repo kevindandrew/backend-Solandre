@@ -13,3 +13,8 @@ class Usuario(SQLModel, table=True):
     telefono: Optional[str] = Field(default=None, max_length=20)
     zona_reparto_id: Optional[int] = Field(
         default=None, foreign_key="zonas_delivery.zona_id")
+    
+    # Datos por defecto para clientes
+    zona_defecto_id: Optional[int] = Field(
+        default=None, foreign_key="zonas_delivery.zona_id")
+    direccion_defecto: Optional[str] = Field(default=None)

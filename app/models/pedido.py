@@ -20,6 +20,7 @@ class Pedido(SQLModel, table=True):
     longitud: Optional[Decimal] = Field(
         default=None, max_digits=11, decimal_places=8)
     direccion_referencia: Optional[str] = Field(default=None)
+    direccion_especifica: Optional[str] = Field(default=None)
 
     # Estados y control
     estado: EstadoDelPedido = Field(
@@ -58,7 +59,7 @@ class Pedido(SQLModel, table=True):
         default=None, foreign_key="usuarios.usuario_id")
 
     # Métricas de tiempo (KPIs)
-    fecha_pedido: Optional[datetime] = Field(default=None)
+    fecha_pedido: Optional[datetime] = Field(default_factory=datetime.now)
     fecha_confirmado: Optional[datetime] = Field(default=None)
     fecha_listo_cocina: Optional[datetime] = Field(default=None)
     fecha_en_reparto: Optional[datetime] = Field(default=None)

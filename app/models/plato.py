@@ -9,6 +9,7 @@ class Plato(SQLModel, table=True):
 
     plato_id: Optional[int] = Field(default=None, primary_key=True)
     nombre: str = Field(max_length=100, nullable=False)
+    imagen_url: str = Field(max_length=255, nullable=False)
     descripcion: Optional[str] = Field(default=None)
     tipo: TipoPlato = Field(
         default=TipoPlato.PRINCIPAL,

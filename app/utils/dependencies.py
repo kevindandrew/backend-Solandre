@@ -56,3 +56,12 @@ def get_current_user(
         )
 
     return usuario
+
+
+def verificar_admin(current_user: Usuario = Depends(get_current_user)):
+    """Verifica que el usuario sea administrador"""
+    if current_user.rol_id != 1:  # 1 = Administrador
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo los administradores pueden acceder a esta sección"
+        )

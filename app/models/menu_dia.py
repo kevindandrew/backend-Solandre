@@ -11,11 +11,11 @@ class MenuDia(SQLModel, table=True):
     fecha: date = Field(unique=True, nullable=False)
     plato_principal_id: int = Field(
         foreign_key="platos.plato_id", nullable=False)
-    bebida_id: int = Field(foreign_key="platos.plato_id", nullable=False)
-    postre_id: int = Field(foreign_key="platos.plato_id", nullable=False)
+    bebida_id: Optional[int] = Field(default=None, foreign_key="platos.plato_id")
+    postre_id: Optional[int] = Field(default=None, foreign_key="platos.plato_id")
     info_nutricional: Optional[str] = Field(default=None)
-    imagen_url: Optional[str] = Field(default=None, max_length=255)
+    imagen_url: str = Field(max_length=255, nullable=False)
     precio_menu: Decimal = Field(
         nullable=False, max_digits=10, decimal_places=2)
     publicado: bool = Field(default=False)
-    cantidad_disponible: int = Field(default=0, nullable=False)
+    cantidad_disponible: int = Field(default=50, nullable=False)

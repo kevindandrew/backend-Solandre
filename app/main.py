@@ -12,6 +12,7 @@ from app.routers.delivery import router as delivery_router
 from app.routers.admin import router as admin_router
 from app.routers.notificaciones import router as notificaciones_router
 from app.routers.health import router as health_router
+from app.routers.upload import router as upload_router
 from app.utils.logger import logger, log_request, log_error
 
 app = FastAPI(
@@ -100,6 +101,7 @@ app.include_router(delivery_router)
 app.include_router(admin_router)
 app.include_router(notificaciones_router)
 app.include_router(role_router)
+app.include_router(upload_router)
 
 
 # Handler global de excepciones

@@ -94,10 +94,16 @@ def get_menu_semanal(db: Session = Depends(get_db)):
         # Obtener los platos de cada menú
         plato_principal = db.query(Plato).filter(
             Plato.plato_id == menu.plato_principal_id).first()
-        bebida = db.query(Plato).filter(
-            Plato.plato_id == menu.bebida_id).first()
-        postre = db.query(Plato).filter(
-            Plato.plato_id == menu.postre_id).first()
+            
+        bebida = None
+        if menu.bebida_id:
+            bebida = db.query(Plato).filter(
+                Plato.plato_id == menu.bebida_id).first()
+                
+        postre = None
+        if menu.postre_id:
+            postre = db.query(Plato).filter(
+                Plato.plato_id == menu.postre_id).first()
 
         resultado.append(MenuDiaResponse(
             menu_dia_id=menu.menu_dia_id,
@@ -108,8 +114,8 @@ def get_menu_semanal(db: Session = Depends(get_db)):
             info_nutricional=menu.info_nutricional,
             imagen_url=menu.imagen_url,
             plato_principal=PlatoSimpleResponse.from_orm(plato_principal),
-            bebida=PlatoSimpleResponse.from_orm(bebida),
-            postre=PlatoSimpleResponse.from_orm(postre)
+            bebida=PlatoSimpleResponse.from_orm(bebida) if bebida else None,
+            postre=PlatoSimpleResponse.from_orm(postre) if postre else None
         ))
 
     return resultado
