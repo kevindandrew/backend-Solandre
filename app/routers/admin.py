@@ -30,7 +30,8 @@ from app.schemas.admin import (
     KPIsResponse,
     CrearZonaRequest,
     ActualizarZonaRequest,
-    ZonaResponse
+    ZonaResponse,
+    ClienteResponse
 )
 from app.utils.dependencies import get_current_user
 from app.utils.security import get_password_hash
@@ -678,9 +679,9 @@ def listar_empleados(
     """
     verificar_admin(current_user)
 
-    # Obtener empleados con rol Cocina (2) o Delivery (3)
+    # Obtener empleados con rol Admin (1), Cocina (2) o Delivery (3)
     empleados = db.query(Usuario).filter(
-        Usuario.rol_id.in_([2, 3])
+        Usuario.rol_id.in_([1, 2, 3])
     ).all()
 
     resultado = []
@@ -798,11 +799,18 @@ def desactivar_empleado(
             detail="Empleado no encontrado"
         )
 
-    # Verificar que sea empleado (rol 2 o 3)
-    if empleado.rol_id not in [2, 3]:
+    # Verificar que no se esté eliminando a sí mismo
+    if empleado_id == current_user.usuario_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Solo se pueden desactivar empleados con rol Cocina o Delivery"
+            detail="No puedes eliminar tu propia cuenta"
+        )
+
+    # Verificar que sea empleado (rol 1, 2 o 3)
+    if empleado.rol_id not in [1, 2, 3]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Solo se pueden desactivar empleados (Admin, Cocina, Delivery)"
         )
 
     # Verificar si tiene pedidos asignados activos (solo para delivery)
@@ -828,6 +836,82 @@ def desactivar_empleado(
     db.commit()
 
     return {"message": "Empleado desactivado exitosamente", "usuario_id": empleado_id}
+
+
+@router.get("/clientes", response_model=List[ClienteResponse])
+def listar_clientes(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Lista todos los clientes registrados (Rol 4).
+    Solo administradores.
+    """
+    verificar_admin(current_user)
+
+    clientes = db.query(Usuario).filter(Usuario.rol_id == 4).all()
+    return [ClienteResponse.from_orm(c) for c in clientes]
+
+
+@router.get("/clientes/{cliente_id}/historial", response_model=List[PedidoDashboardResponse])
+def historial_cliente(
+    cliente_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Obtiene el historial de pedidos de un cliente específico.
+    Solo administradores.
+    """
+    verificar_admin(current_user)
+
+    # Verificar que el cliente existe
+    cliente = db.query(Usuario).filter(Usuario.usuario_id == cliente_id).first()
+    if not cliente:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Cliente no encontrado"
+        )
+
+    # Obtener pedidos del cliente
+    pedidos = db.query(Pedido).filter(
+        Pedido.usuario_id == cliente_id
+    ).order_by(Pedido.fecha_pedido.desc()).all()
+
+    resultado = []
+    for pedido in pedidos:
+        # Obtener zona
+        zona = db.query(ZonaDelivery).filter(
+            ZonaDelivery.zona_id == pedido.zona_id).first()
+
+        # Obtener delivery si está asignado
+        delivery_nombre = None
+        if pedido.delivery_asignado_id:
+            delivery = db.query(Usuario).filter(
+                Usuario.usuario_id == pedido.delivery_asignado_id
+            ).first()
+            if delivery:
+                delivery_nombre = delivery.nombre_completo
+
+        resultado.append(PedidoDashboardResponse(
+            pedido_id=pedido.pedido_id,
+            token_recoger=pedido.token_recoger,
+            estado=pedido.estado,
+            cliente_nombre=cliente.nombre_completo,
+            cliente_email=cliente.email,
+            zona_nombre=zona.nombre_zona if zona else "N/A",
+            delivery_nombre=delivery_nombre,
+            total_pedido=pedido.total_pedido,
+            metodo_pago=pedido.metodo_pago,
+            esta_pagado=pedido.esta_pagado,
+            fecha_pedido=pedido.fecha_pedido,
+            fecha_confirmado=pedido.fecha_confirmado,
+            fecha_listo_cocina=pedido.fecha_listo_cocina,
+            fecha_en_reparto=pedido.fecha_en_reparto,
+            fecha_entrega=pedido.fecha_entrega
+        ))
+
+    return resultado
 
 
 # ========== GESTIÓN DE PEDIDOS Y MÉTRICAS ==========

@@ -136,6 +136,20 @@ class EmpleadoResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ClienteResponse(BaseModel):
+    """Response de un cliente"""
+    usuario_id: int
+    email: str
+    nombre_completo: str
+    telefono: Optional[str]
+    rol_id: int
+    zona_defecto_id: Optional[int]
+    direccion_defecto: Optional[str]
+    fecha_registro: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 # ========== GESTIÓN DE PEDIDOS Y MÉTRICAS ==========
 
 class PedidoDashboardResponse(BaseModel):
