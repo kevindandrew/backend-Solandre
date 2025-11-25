@@ -73,7 +73,6 @@ def get_menu_hoy(db: Session = Depends(get_db)):
         cantidad_disponible=menu.cantidad_disponible,
         publicado=menu.publicado,
         info_nutricional=menu.info_nutricional,
-        imagen_url=menu.imagen_url,
         plato_principal=PlatoSimpleResponse.from_orm(plato_principal),
         bebida=PlatoSimpleResponse.from_orm(bebida) if bebida else None,
         postre=PlatoSimpleResponse.from_orm(postre) if postre else None

@@ -31,7 +31,7 @@ class PlatoCompletoResponse(BaseModel):
     nombre: str
     descripcion: Optional[str]
     tipo: TipoPlato
-    imagen_url: str
+    imagen_url: Optional[str]
 
     class Config:
         from_attributes = True
@@ -45,7 +45,7 @@ class MenuDiaResponse(BaseModel):
     cantidad_disponible: int
     publicado: bool
     info_nutricional: Optional[str]
-    imagen_url: str
+    imagen_url: Optional[str]
 
     # Platos del menú
     plato_principal: PlatoSimpleResponse

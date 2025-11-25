@@ -20,7 +20,6 @@ class Pedido(SQLModel, table=True):
     longitud: Optional[Decimal] = Field(
         default=None, max_digits=11, decimal_places=8)
     direccion_referencia: Optional[str] = Field(default=None)
-    direccion_especifica: Optional[str] = Field(default=None)
 
     # Estados y control
     estado: EstadoDelPedido = Field(
@@ -40,19 +39,6 @@ class Pedido(SQLModel, table=True):
     # Dinero
     total_pedido: Decimal = Field(
         nullable=False, max_digits=10, decimal_places=2)
-    metodo_pago: MetodoPago = Field(
-        default=MetodoPago.EFECTIVO,
-        sa_column=Column(
-            SQLAEnum(
-                MetodoPago,
-                name="metodo_pago",
-                create_type=False,
-                native_enum=False,
-                values_callable=lambda x: [e.value for e in x]
-            )
-        )
-    )
-    esta_pagado: bool = Field(default=False)
 
     # Asignación automática
     delivery_asignado_id: Optional[int] = Field(

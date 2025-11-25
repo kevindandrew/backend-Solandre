@@ -155,6 +155,9 @@ def actualizar_menu_dia(
     if request.precio_menu is not None:
         menu.precio_menu = request.precio_menu
 
+    if request.imagen_url is not None:
+        menu.imagen_url = request.imagen_url
+
     if request.publicado is not None:
         menu.publicado = request.publicado
 
@@ -275,17 +278,6 @@ def crear_plato(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Ingrediente con ID {ing_req.ingrediente_id} no encontrado"
                 )
-
-    # Crear el plato
-    nuevo_plato = Plato(
-        nombre=request.nombre,
-        descripcion=request.descripcion,
-        imagen_url=request.imagen_url,
-        tipo=request.tipo
-    )
-
-    db.add(nuevo_plato)
-    db.flush()  # Para obtener el plato_id
 
     # Crear relaciones con ingredientes
     for ing_req in request.ingredientes:
@@ -902,8 +894,6 @@ def historial_cliente(
             zona_nombre=zona.nombre_zona if zona else "N/A",
             delivery_nombre=delivery_nombre,
             total_pedido=pedido.total_pedido,
-            metodo_pago=pedido.metodo_pago,
-            esta_pagado=pedido.esta_pagado,
             fecha_pedido=pedido.fecha_pedido,
             fecha_confirmado=pedido.fecha_confirmado,
             fecha_listo_cocina=pedido.fecha_listo_cocina,
@@ -982,8 +972,6 @@ def obtener_dashboard_pedidos(
             zona_nombre=zona.nombre_zona if zona else "N/A",
             delivery_nombre=delivery_nombre,
             total_pedido=pedido.total_pedido,
-            metodo_pago=pedido.metodo_pago,
-            esta_pagado=pedido.esta_pagado,
             fecha_pedido=pedido.fecha_pedido,
             fecha_confirmado=pedido.fecha_confirmado,
             fecha_listo_cocina=pedido.fecha_listo_cocina,
@@ -1052,8 +1040,6 @@ def confirmar_pedido(
         zona_nombre=zona.nombre_zona if zona else "N/A",
         delivery_nombre=delivery_nombre,
         total_pedido=pedido.total_pedido,
-        metodo_pago=pedido.metodo_pago,
-        esta_pagado=pedido.esta_pagado,
         fecha_pedido=pedido.fecha_pedido,
         fecha_confirmado=pedido.fecha_confirmado,
         fecha_listo_cocina=pedido.fecha_listo_cocina,
@@ -1127,8 +1113,6 @@ def reasignar_delivery(
         zona_nombre=zona.nombre_zona if zona else "N/A",
         delivery_nombre=nuevo_delivery.nombre_completo,
         total_pedido=pedido.total_pedido,
-        metodo_pago=pedido.metodo_pago,
-        esta_pagado=pedido.esta_pagado,
         fecha_pedido=pedido.fecha_pedido,
         fecha_confirmado=pedido.fecha_confirmado,
         fecha_listo_cocina=pedido.fecha_listo_cocina,
@@ -1171,13 +1155,13 @@ def obtener_kpis(
     # Ventas totales
     ventas_totales = sum(p.total_pedido for p in pedidos)
 
-    # Ventas por método de pago
+    # Ventas por método de pago (Deshabilitado por falta de campo en BD)
     ventas_por_metodo_pago = {}
-    for p in pedidos:
-        metodo = p.metodo_pago.value
-        if metodo not in ventas_por_metodo_pago:
-            ventas_por_metodo_pago[metodo] = 0
-        ventas_por_metodo_pago[metodo] += float(p.total_pedido)
+    # for p in pedidos:
+    #     metodo = p.metodo_pago.value
+    #     if metodo not in ventas_por_metodo_pago:
+    #         ventas_por_metodo_pago[metodo] = 0
+    #     ventas_por_metodo_pago[metodo] += float(p.total_pedido)
 
     # Calcular tiempos promedio
     tiempos_preparacion = []
@@ -1396,8 +1380,6 @@ def obtener_detalle_completo_pedido(
         "direccion_entrega": pedido.direccion_entrega,
         "items": items_detalle,
         "total_pedido": float(pedido.total_pedido),
-        "metodo_pago": pedido.metodo_pago.value,
-        "esta_pagado": pedido.esta_pagado,
         "instrucciones_entrega": pedido.instrucciones_entrega,
         "fecha_pedido": pedido.fecha_pedido.isoformat() if pedido.fecha_pedido else None,
         "fecha_confirmado": pedido.fecha_confirmado.isoformat() if pedido.fecha_confirmado else None,
@@ -1431,20 +1413,6 @@ def crear_zona(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Ya existe una zona con el nombre '{request.nombre_zona}'"
         )
-
-    # Crear la zona
-    nueva_zona = ZonaDelivery(
-        nombre_zona=request.nombre_zona
-    )
-
-    db.add(nueva_zona)
-    db.commit()
-    db.refresh(nueva_zona)
-
-    return ZonaResponse.from_orm(nueva_zona)
-
-
-@router.get("/zonas", response_model=List[ZonaResponse])
 def listar_zonas(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)

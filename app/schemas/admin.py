@@ -16,7 +16,7 @@ class CrearMenuRequest(BaseModel):
     postre_id: Optional[int] = Field(None, description="ID del postre")
     info_nutricional: Optional[str] = Field(
         None, description="Información nutricional")
-    imagen_url: str = Field(..., description="URL de la imagen del menú")
+    imagen_url: Optional[str] = Field(None, description="URL de la imagen del menú")
     cantidad_disponible: int = Field(50, gt=0, description="Stock inicial")
     precio_menu: Decimal = Field(..., gt=0, description="Precio del menú")
     publicado: bool = Field(
@@ -29,6 +29,7 @@ class ActualizarMenuRequest(BaseModel):
         None, ge=0, description="Nuevo stock")
     precio_menu: Optional[Decimal] = Field(
         None, gt=0, description="Nuevo precio")
+    imagen_url: Optional[str] = Field(None, description="Nueva URL de imagen")
     publicado: Optional[bool] = Field(None, description="Cambiar visibilidad")
 
 
@@ -41,7 +42,7 @@ class MenuResponse(BaseModel):
     postre_id: Optional[int]
     cantidad_disponible: int
     precio_menu: Decimal
-    imagen_url: str
+    imagen_url: Optional[str]
     publicado: bool
 
     model_config = ConfigDict(from_attributes=True)
@@ -60,7 +61,7 @@ class CrearPlatoRequest(BaseModel):
     """Request para crear un nuevo plato"""
     nombre: str = Field(..., min_length=1, max_length=100,
                         description="Nombre del plato")
-    imagen_url: str = Field(..., description="URL de la imagen del plato")
+    imagen_url: Optional[str] = Field(None, description="URL de la imagen del plato")
     descripcion: Optional[str] = Field(
         None, max_length=500, description="Descripción del plato")
     tipo: TipoPlato = Field(...,
@@ -75,7 +76,7 @@ class PlatoResponse(BaseModel):
     """Response de un plato"""
     plato_id: int
     nombre: str
-    imagen_url: str
+    imagen_url: Optional[str]
     descripcion: Optional[str]
     tipo: TipoPlato
 
@@ -143,8 +144,6 @@ class ClienteResponse(BaseModel):
     nombre_completo: str
     telefono: Optional[str]
     rol_id: int
-    zona_defecto_id: Optional[int]
-    direccion_defecto: Optional[str]
     fecha_registro: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
@@ -162,8 +161,6 @@ class PedidoDashboardResponse(BaseModel):
     zona_nombre: str
     delivery_nombre: Optional[str]
     total_pedido: Decimal
-    metodo_pago: MetodoPago
-    esta_pagado: bool
     fecha_pedido: datetime
     fecha_confirmado: Optional[datetime]
     fecha_listo_cocina: Optional[datetime]
@@ -206,8 +203,6 @@ class CrearZonaRequest(BaseModel):
     """Request para crear una zona de delivery"""
     nombre_zona: str = Field(..., min_length=1, max_length=100,
                              description="Nombre de la zona")
-    costo_envio: Decimal = Field(default=Decimal("0.00"), ge=0,
-                                 description="Costo de envío")
 
 
 class ActualizarZonaRequest(BaseModel):
@@ -220,6 +215,5 @@ class ZonaResponse(BaseModel):
     """Response de una zona de delivery"""
     zona_id: int
     nombre_zona: str
-    costo_envio: Decimal
 
     model_config = ConfigDict(from_attributes=True)

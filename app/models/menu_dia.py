@@ -14,7 +14,7 @@ class MenuDia(SQLModel, table=True):
     bebida_id: Optional[int] = Field(default=None, foreign_key="platos.plato_id")
     postre_id: Optional[int] = Field(default=None, foreign_key="platos.plato_id")
     info_nutricional: Optional[str] = Field(default=None)
-    imagen_url: str = Field(max_length=255, nullable=False)
+    imagen_url: Optional[str] = Field(default=None, max_length=255)
     precio_menu: Decimal = Field(
         nullable=False, max_digits=10, decimal_places=2)
     publicado: bool = Field(default=False)
