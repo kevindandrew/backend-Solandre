@@ -1413,6 +1413,17 @@ def crear_zona(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Ya existe una zona con el nombre '{request.nombre_zona}'"
         )
+
+    # Crear la zona
+    nueva_zona = ZonaDelivery(
+        nombre_zona=request.nombre_zona
+    )
+
+    db.add(nueva_zona)
+    db.commit()
+    db.refresh(nueva_zona)
+
+    return ZonaResponse.from_orm(nueva_zona)
 def listar_zonas(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
