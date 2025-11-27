@@ -39,6 +39,20 @@ class Pedido(SQLModel, table=True):
     # Dinero
     total_pedido: Decimal = Field(
         nullable=False, max_digits=10, decimal_places=2)
+    
+    metodo_pago: MetodoPago = Field(
+        sa_column=Column(
+            SQLAEnum(
+                MetodoPago,
+                name="metodo_pago",
+                create_type=False,
+                native_enum=False,
+                values_callable=lambda x: [e.value for e in x]
+            ),
+            nullable=False
+        )
+    )
+    esta_pagado: bool = Field(default=False)
 
     # Asignación automática
     delivery_asignado_id: Optional[int] = Field(
