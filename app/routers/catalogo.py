@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from datetime import date, timedelta
-from typing import List
+from typing import List, Optional
 
 from app.database import get_db
 from app.models.zona_delivery import ZonaDelivery
@@ -32,6 +32,58 @@ def get_zonas(db: Session = Depends(get_db)):
     """
     zonas = db.query(ZonaDelivery).all()
     return zonas
+
+
+@router.get("/menus", response_model=List[MenuDiaResponse])
+def listar_menus_publico(
+    fecha_inicio: Optional[date] = Query(None, description="Fecha inicio del filtro"),
+    fecha_fin: Optional[date] = Query(None, description="Fecha fin del filtro"),
+    db: Session = Depends(get_db)
+):
+    """
+    Lista todos los menús publicados con filtros de fecha opcionales.
+    Permite ver el historial o futuros menús.
+    """
+    query = db.query(MenuDia).filter(MenuDia.publicado == True)
+
+    if fecha_inicio:
+        query = query.filter(MenuDia.fecha >= fecha_inicio)
+    
+    if fecha_fin:
+        query = query.filter(MenuDia.fecha <= fecha_fin)
+
+    menus = query.order_by(MenuDia.fecha.desc()).all()
+
+    resultado = []
+    for menu in menus:
+        # Obtener los platos de cada menú
+        plato_principal = db.query(Plato).filter(
+            Plato.plato_id == menu.plato_principal_id).first()
+            
+        bebida = None
+        if menu.bebida_id:
+            bebida = db.query(Plato).filter(
+                Plato.plato_id == menu.bebida_id).first()
+                
+        postre = None
+        if menu.postre_id:
+            postre = db.query(Plato).filter(
+                Plato.plato_id == menu.postre_id).first()
+
+        resultado.append(MenuDiaResponse(
+            menu_dia_id=menu.menu_dia_id,
+            fecha=menu.fecha,
+            precio_menu=menu.precio_menu,
+            cantidad_disponible=menu.cantidad_disponible,
+            publicado=menu.publicado,
+            info_nutricional=menu.info_nutricional,
+            imagen_url=menu.imagen_url,
+            plato_principal=PlatoSimpleResponse.from_orm(plato_principal),
+            bebida=PlatoSimpleResponse.from_orm(bebida) if bebida else None,
+            postre=PlatoSimpleResponse.from_orm(postre) if postre else None
+        ))
+
+    return resultado
 
 
 @router.get("/menu-hoy", response_model=MenuDiaResponse)
@@ -168,10 +220,36 @@ def get_menu_ingredientes(menu_id: int, db: Session = Depends(get_db)):
 def get_platos(db: Session = Depends(get_db)):
     """
     Obtiene el catálogo completo de platos disponibles.
-    Útil para explorar todas las opciones del restaurante.
+    Incluye la lista de ingredientes de cada plato.
     """
     platos = db.query(Plato).all()
-    return [PlatoCompletoResponse.from_orm(plato) for plato in platos]
+    
+    resultado = []
+    for plato in platos:
+        # Obtener ingredientes del plato
+        ingredientes_ids = db.query(PlatoIngrediente.ingrediente_id).filter(
+            PlatoIngrediente.plato_id == plato.plato_id
+        ).all()
+
+        ingredientes = []
+        for (ing_id,) in ingredientes_ids:
+            ingrediente = db.query(Ingrediente).filter(
+                Ingrediente.ingrediente_id == ing_id).first()
+            if ingrediente:
+                ingredientes.append(IngredienteResponse.from_orm(ingrediente))
+        
+        # Crear respuesta manual para incluir ingredientes
+        plato_response = PlatoCompletoResponse(
+            plato_id=plato.plato_id,
+            nombre=plato.nombre,
+            descripcion=plato.descripcion,
+            tipo=plato.tipo,
+            imagen_url=plato.imagen_url,
+            ingredientes=ingredientes
+        )
+        resultado.append(plato_response)
+
+    return resultado
 
 
 @router.get("/menu/{fecha}", response_model=MenuDiaResponse)

@@ -25,13 +25,24 @@ class PlatoSimpleResponse(BaseModel):
         from_attributes = True
 
 
+
+class IngredienteResponse(BaseModel):
+    """Schema para la respuesta de ingredientes"""
+    ingrediente_id: int
+    nombre: str
+
+    class Config:
+        from_attributes = True
+
+
 class PlatoCompletoResponse(BaseModel):
-    """Schema completo de plato con imagen"""
+    """Schema completo de plato con imagen e ingredientes"""
     plato_id: int
     nombre: str
     descripcion: Optional[str]
     tipo: TipoPlato
     imagen_url: Optional[str]
+    ingredientes: list[IngredienteResponse] = []
 
     class Config:
         from_attributes = True
@@ -51,15 +62,6 @@ class MenuDiaResponse(BaseModel):
     plato_principal: PlatoSimpleResponse
     bebida: Optional[PlatoSimpleResponse]
     postre: Optional[PlatoSimpleResponse]
-
-    class Config:
-        from_attributes = True
-
-
-class IngredienteResponse(BaseModel):
-    """Schema para la respuesta de ingredientes"""
-    ingrediente_id: int
-    nombre: str
 
     class Config:
         from_attributes = True
