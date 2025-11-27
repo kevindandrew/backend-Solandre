@@ -279,6 +279,17 @@ def crear_plato(
                     detail=f"Ingrediente con ID {ing_req.ingrediente_id} no encontrado"
                 )
 
+    # Crear el plato
+    nuevo_plato = Plato(
+        nombre=request.nombre,
+        descripcion=request.descripcion,
+        imagen_url=request.imagen_url,
+        tipo=request.tipo
+    )
+    db.add(nuevo_plato)
+    db.commit()
+    db.refresh(nuevo_plato)
+
     # Crear relaciones con ingredientes
     for ing_req in request.ingredientes:
         plato_ingrediente = PlatoIngrediente(
