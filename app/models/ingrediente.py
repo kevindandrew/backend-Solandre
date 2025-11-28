@@ -10,3 +10,4 @@ class Ingrediente(SQLModel, table=True):
     nombre: str = Field(max_length=100, unique=True, nullable=False)
     stock_actual: Optional[Decimal] = Field(
         default=None, max_digits=10, decimal_places=2)
+    unidad_medida: Optional[str] = Field(default=None, max_length=20)
