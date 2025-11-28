@@ -507,6 +507,31 @@ def listar_ingredientes(
     return [IngredienteResponse.from_orm(i) for i in ingredientes]
 
 
+@router.get("/ingredientes/{ingrediente_id}", response_model=IngredienteResponse)
+def obtener_ingrediente(
+    ingrediente_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Obtiene los detalles de un ingrediente específico.
+    Solo administradores.
+    """
+    verificar_admin(current_user)
+
+    ingrediente = db.query(Ingrediente).filter(
+        Ingrediente.ingrediente_id == ingrediente_id
+    ).first()
+
+    if not ingrediente:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ingrediente no encontrado"
+        )
+
+    return IngredienteResponse.from_orm(ingrediente)
+
+
 @router.put("/ingredientes/{ingrediente_id}", response_model=IngredienteResponse)
 def actualizar_ingrediente(
     ingrediente_id: int,
