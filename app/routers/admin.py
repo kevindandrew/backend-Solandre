@@ -946,6 +946,7 @@ def historial_cliente(
             estado=pedido.estado,
             cliente_nombre=cliente.nombre_completo,
             cliente_email=cliente.email,
+            cliente_telefono=cliente.telefono,
             zona_nombre=zona.nombre_zona if zona else "N/A",
             delivery_nombre=delivery_nombre,
             total_pedido=pedido.total_pedido,
@@ -1024,6 +1025,7 @@ def obtener_dashboard_pedidos(
             estado=pedido.estado,
             cliente_nombre=cliente.nombre_completo if cliente else "Desconocido",
             cliente_email=cliente.email if cliente else "N/A",
+            cliente_telefono=cliente.telefono if cliente else "N/A",
             zona_nombre=zona.nombre_zona if zona else "N/A",
             delivery_nombre=delivery_nombre,
             total_pedido=pedido.total_pedido,
@@ -1092,6 +1094,7 @@ def confirmar_pedido(
         estado=pedido.estado,
         cliente_nombre=cliente.nombre_completo if cliente else "Desconocido",
         cliente_email=cliente.email if cliente else "N/A",
+        cliente_telefono=cliente.telefono if cliente else "N/A",
         zona_nombre=zona.nombre_zona if zona else "N/A",
         delivery_nombre=delivery_nombre,
         total_pedido=pedido.total_pedido,
@@ -1165,6 +1168,7 @@ def reasignar_delivery(
         estado=pedido.estado,
         cliente_nombre=cliente.nombre_completo if cliente else "Desconocido",
         cliente_email=cliente.email if cliente else "N/A",
+        cliente_telefono=cliente.telefono if cliente else "N/A",
         zona_nombre=zona.nombre_zona if zona else "N/A",
         delivery_nombre=nuevo_delivery.nombre_completo,
         total_pedido=pedido.total_pedido,
@@ -1255,6 +1259,7 @@ def actualizar_estado_pedido(
         estado=pedido.estado,
         cliente_nombre=cliente.nombre_completo if cliente else "Desconocido",
         cliente_email=cliente.email if cliente else "N/A",
+        cliente_telefono=cliente.telefono if cliente else "N/A",
         zona_nombre=zona.nombre_zona if zona else "N/A",
         delivery_nombre=delivery_nombre,
         total_pedido=pedido.total_pedido,
@@ -1456,11 +1461,11 @@ def obtener_detalle_completo_pedido(
         plato = None
         if menu:
             plato = db.query(Plato).filter(
-                Plato.plato_id == menu.plato_id).first()
+                Plato.plato_id == menu.plato_principal_id).first()
 
         # Obtener exclusiones de este item
         exclusiones = db.query(ItemExclusion).filter(
-            ItemExclusion.pedido_item_id == item.pedido_item_id
+            ItemExclusion.item_id == item.item_id
         ).all()
 
         exclusiones_detalle = []
@@ -1475,12 +1480,12 @@ def obtener_detalle_completo_pedido(
                 })
 
         items_detalle.append({
-            "pedido_item_id": item.pedido_item_id,
+            "pedido_item_id": item.item_id,
             "menu_dia_id": item.menu_dia_id,
             "plato_nombre": plato.nombre if plato else "Desconocido",
             "cantidad": item.cantidad,
             "precio_unitario": float(item.precio_unitario),
-            "subtotal": float(item.subtotal),
+            "subtotal": float(item.cantidad * item.precio_unitario),
             "exclusiones": exclusiones_detalle
         })
 
@@ -1519,13 +1524,13 @@ def obtener_detalle_completo_pedido(
         "zona": {
             "zona_id": zona.zona_id if zona else None,
             "nombre": zona.nombre_zona if zona else "N/A",
-            "costo": float(zona.costo_delivery) if zona else 0
+            "costo": 0
         },
         "delivery": delivery_info,
-        "direccion_entrega": pedido.direccion_entrega,
+        "direccion_entrega": pedido.direccion_referencia,
         "items": items_detalle,
         "total_pedido": float(pedido.total_pedido),
-        "instrucciones_entrega": pedido.instrucciones_entrega,
+
         "fecha_pedido": pedido.fecha_pedido.isoformat() if pedido.fecha_pedido else None,
         "fecha_confirmado": pedido.fecha_confirmado.isoformat() if pedido.fecha_confirmado else None,
         "fecha_listo_cocina": pedido.fecha_listo_cocina.isoformat() if pedido.fecha_listo_cocina else None,

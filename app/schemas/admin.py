@@ -176,6 +176,7 @@ class PedidoDashboardResponse(BaseModel):
     estado: EstadoDelPedido
     cliente_nombre: str
     cliente_email: str
+    cliente_telefono: Optional[str] = None
     zona_nombre: str
     delivery_nombre: Optional[str]
     total_pedido: Decimal
