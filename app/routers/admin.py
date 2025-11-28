@@ -31,7 +31,9 @@ from app.schemas.admin import (
     CrearZonaRequest,
     ActualizarZonaRequest,
     ZonaResponse,
-    ClienteResponse
+    ClienteResponse,
+    IngredienteEnPlatoResponse,
+    PlatoDetalleResponse
 )
 from app.utils.dependencies import get_current_user
 from app.utils.security import get_password_hash
@@ -317,7 +319,56 @@ def listar_platos(
     verificar_admin(current_user)
 
     platos = db.query(Plato).all()
+    platos = db.query(Plato).all()
     return [PlatoResponse.from_orm(p) for p in platos]
+
+
+@router.get("/platos/{plato_id}", response_model=PlatoDetalleResponse)
+def obtener_plato(
+    plato_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Obtiene el detalle completo de un plato, incluyendo ingredientes y cantidades.
+    Solo administradores.
+    """
+    verificar_admin(current_user)
+
+    plato = db.query(Plato).filter(Plato.plato_id == plato_id).first()
+    if not plato:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Plato no encontrado"
+        )
+
+    # Obtener ingredientes con sus cantidades
+    ingredientes_response = []
+    plato_ingredientes = db.query(PlatoIngrediente).filter(
+        PlatoIngrediente.plato_id == plato_id
+    ).all()
+
+    for pi in plato_ingredientes:
+        ingrediente = db.query(Ingrediente).filter(
+            Ingrediente.ingrediente_id == pi.ingrediente_id
+        ).first()
+        
+        if ingrediente:
+            ingredientes_response.append(IngredienteEnPlatoResponse(
+                ingrediente_id=ingrediente.ingrediente_id,
+                nombre=ingrediente.nombre,
+                cantidad_requerida=pi.cantidad_requerida,
+                unidad_medida=ingrediente.unidad_medida
+            ))
+
+    return PlatoDetalleResponse(
+        plato_id=plato.plato_id,
+        nombre=plato.nombre,
+        imagen_url=plato.imagen_url,
+        descripcion=plato.descripcion,
+        tipo=plato.tipo,
+        ingredientes=ingredientes_response
+    )
 
 
 @router.put("/platos/{plato_id}", response_model=PlatoResponse)

@@ -83,6 +83,28 @@ class PlatoResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class IngredienteEnPlatoResponse(BaseModel):
+    """Response de ingrediente dentro de un plato (con cantidad)"""
+    ingrediente_id: int
+    nombre: str
+    cantidad_requerida: Decimal
+    unidad_medida: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PlatoDetalleResponse(BaseModel):
+    """Response detallado de un plato con sus ingredientes"""
+    plato_id: int
+    nombre: str
+    imagen_url: Optional[str]
+    descripcion: Optional[str]
+    tipo: TipoPlato
+    ingredientes: List[IngredienteEnPlatoResponse] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 # ========== INGREDIENTES ==========
 
 class CrearIngredienteRequest(BaseModel):
