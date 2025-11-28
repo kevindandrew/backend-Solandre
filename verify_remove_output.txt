@@ -1,0 +1,4 @@
+Testing PUT /admin/ingredientes/1
+Status Code: 401
+Response: {"detail":"Token inválido"}
+FAIL: Status code not 200

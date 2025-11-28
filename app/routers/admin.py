@@ -559,9 +559,7 @@ def actualizar_ingrediente(
 
     # Actualizar campos
     ingrediente.nombre = request.nombre
-    ingrediente.unidad_medida = request.unidad_medida
     ingrediente.stock_actual = request.stock_actual
-    ingrediente.stock_minimo = request.stock_minimo
 
     db.commit()
     db.refresh(ingrediente)
@@ -569,30 +567,7 @@ def actualizar_ingrediente(
     return IngredienteResponse.from_orm(ingrediente)
 
 
-@router.get("/ingredientes/bajo-stock", response_model=List[IngredienteResponse])
-def ingredientes_bajo_stock(
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user)
-):
-    """
-    Lista ingredientes con stock bajo.
 
-    NOTA: El modelo Ingrediente no tiene campo stock_minimo en la BD,
-    por lo que este endpoint devuelve una lista vacía.
-    Para activarlo, agrega el campo stock_minimo a la tabla ingredientes.
-
-    Solo administradores.
-    """
-    verificar_admin(current_user)
-
-    # Como no existe stock_minimo en la BD, devuelve lista vacía
-    # Si en el futuro agregas stock_minimo a la tabla, descomenta esto:
-    # ingredientes = db.query(Ingrediente).filter(
-    #     Ingrediente.stock_actual < Ingrediente.stock_minimo
-    # ).all()
-    # return [IngredienteResponse.from_orm(i) for i in ingredientes]
-
-    return []
 
 
 # ========== GESTIÓN DE PERSONAL ==========
