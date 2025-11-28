@@ -33,7 +33,8 @@ from app.schemas.admin import (
     ZonaResponse,
     ClienteResponse,
     ActualizarEstadoPedidoRequest,
-    PlatoDetalleResponse
+    PlatoDetalleResponse,
+    IngredienteEnPlatoResponse
 )
 from app.utils.dependencies import get_current_user
 from app.utils.security import get_password_hash
