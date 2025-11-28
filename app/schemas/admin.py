@@ -194,6 +194,11 @@ class ReasignarDeliveryRequest(BaseModel):
                                    description="ID del nuevo delivery a asignar")
 
 
+class ActualizarEstadoPedidoRequest(BaseModel):
+    """Request para actualizar el estado de un pedido manualmente"""
+    estado: EstadoDelPedido = Field(..., description="Nuevo estado del pedido")
+
+
 class KPIsResponse(BaseModel):
     """Response con KPIs y métricas del día"""
     fecha: date

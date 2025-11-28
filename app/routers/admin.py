@@ -32,7 +32,7 @@ from app.schemas.admin import (
     ActualizarZonaRequest,
     ZonaResponse,
     ClienteResponse,
-    IngredienteEnPlatoResponse,
+    ActualizarEstadoPedidoRequest,
     PlatoDetalleResponse
 )
 from app.utils.dependencies import get_current_user
@@ -42,8 +42,6 @@ router = APIRouter(
     prefix="/admin",
     tags=["Administración"]
 )
-
-
 def verificar_admin(current_user: Usuario):
     """Verifica que el usuario sea administrador"""
     if current_user.rol_id != 1:  # 1 = Administrador
@@ -1168,6 +1166,96 @@ def reasignar_delivery(
         cliente_email=cliente.email if cliente else "N/A",
         zona_nombre=zona.nombre_zona if zona else "N/A",
         delivery_nombre=nuevo_delivery.nombre_completo,
+        total_pedido=pedido.total_pedido,
+        fecha_pedido=pedido.fecha_pedido,
+        fecha_confirmado=pedido.fecha_confirmado,
+        fecha_listo_cocina=pedido.fecha_listo_cocina,
+        fecha_en_reparto=pedido.fecha_en_reparto,
+        fecha_entrega=pedido.fecha_entrega
+    )
+
+
+@router.patch("/pedidos/{pedido_id}/estado", response_model=PedidoDashboardResponse)
+def actualizar_estado_pedido(
+    pedido_id: int,
+    request: ActualizarEstadoPedidoRequest,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Actualiza manualmente el estado de un pedido.
+    Actualiza también la fecha correspondiente al nuevo estado.
+    Si se cancela, restaura el stock.
+    Solo administradores.
+    """
+    verificar_admin(current_user)
+
+    # Buscar el pedido
+    pedido = db.query(Pedido).filter(Pedido.pedido_id == pedido_id).first()
+    if not pedido:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Pedido no encontrado"
+        )
+
+    nuevo_estado = request.estado
+    ahora = datetime.now()
+
+    # Si el estado es el mismo, no hacer nada
+    if pedido.estado == nuevo_estado:
+        pass # Solo devolver el pedido actual
+
+    # Si se cancela, restaurar stock (si no estaba ya cancelado)
+    elif nuevo_estado == EstadoDelPedido.CANCELADO:
+        if pedido.estado != EstadoDelPedido.CANCELADO:
+            from app.models.pedido_item import PedidoItem
+            items = db.query(PedidoItem).filter(
+                PedidoItem.pedido_id == pedido_id).all()
+
+            for item in items:
+                menu = db.query(MenuDia).filter(
+                    MenuDia.menu_dia_id == item.menu_dia_id).first()
+                if menu:
+                    menu.cantidad_disponible += item.cantidad
+    
+    # Actualizar fechas según el estado
+    if nuevo_estado == EstadoDelPedido.CONFIRMADO:
+        pedido.fecha_confirmado = ahora
+    elif nuevo_estado == EstadoDelPedido.LISTO_PARA_ENTREGA:
+        pedido.fecha_listo_cocina = ahora
+    elif nuevo_estado == EstadoDelPedido.EN_REPARTO:
+        pedido.fecha_en_reparto = ahora
+    elif nuevo_estado == EstadoDelPedido.ENTREGADO:
+        pedido.fecha_entrega = ahora
+    
+    # Actualizar estado
+    pedido.estado = nuevo_estado
+    
+    db.commit()
+    db.refresh(pedido)
+
+    # Construir respuesta
+    cliente = db.query(Usuario).filter(
+        Usuario.usuario_id == pedido.usuario_id).first()
+    zona = db.query(ZonaDelivery).filter(
+        ZonaDelivery.zona_id == pedido.zona_id).first()
+
+    delivery_nombre = None
+    if pedido.delivery_asignado_id:
+        delivery = db.query(Usuario).filter(
+            Usuario.usuario_id == pedido.delivery_asignado_id
+        ).first()
+        if delivery:
+            delivery_nombre = delivery.nombre_completo
+
+    return PedidoDashboardResponse(
+        pedido_id=pedido.pedido_id,
+        token_recoger=pedido.token_recoger,
+        estado=pedido.estado,
+        cliente_nombre=cliente.nombre_completo if cliente else "Desconocido",
+        cliente_email=cliente.email if cliente else "N/A",
+        zona_nombre=zona.nombre_zona if zona else "N/A",
+        delivery_nombre=delivery_nombre,
         total_pedido=pedido.total_pedido,
         fecha_pedido=pedido.fecha_pedido,
         fecha_confirmado=pedido.fecha_confirmado,
