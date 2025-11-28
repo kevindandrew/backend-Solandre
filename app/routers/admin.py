@@ -1528,6 +1528,9 @@ def obtener_detalle_completo_pedido(
         },
         "delivery": delivery_info,
         "direccion_entrega": pedido.direccion_referencia,
+        "latitud": float(pedido.latitud) if pedido.latitud else None,
+        "longitud": float(pedido.longitud) if pedido.longitud else None,
+        "direccion_referencia": pedido.direccion_referencia,
         "items": items_detalle,
         "total_pedido": float(pedido.total_pedido),
 
