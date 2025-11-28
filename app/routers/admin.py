@@ -296,8 +296,7 @@ def crear_plato(
     for ing_req in request.ingredientes:
         plato_ingrediente = PlatoIngrediente(
             plato_id=nuevo_plato.plato_id,
-            ingrediente_id=ing_req.ingrediente_id,
-            cantidad_requerida=ing_req.cantidad_requerida
+            ingrediente_id=ing_req.ingrediente_id
         )
         db.add(plato_ingrediente)
 
@@ -356,9 +355,7 @@ def obtener_plato(
         if ingrediente:
             ingredientes_response.append(IngredienteEnPlatoResponse(
                 ingrediente_id=ingrediente.ingrediente_id,
-                nombre=ingrediente.nombre,
-                cantidad_requerida=pi.cantidad_requerida,
-                unidad_medida=ingrediente.unidad_medida
+                nombre=ingrediente.nombre
             ))
 
     return PlatoDetalleResponse(
@@ -409,8 +406,7 @@ def actualizar_plato(
         for ing_req in request.ingredientes:
             plato_ingrediente = PlatoIngrediente(
                 plato_id=plato_id,
-                ingrediente_id=ing_req.ingrediente_id,
-                cantidad_requerida=ing_req.cantidad_requerida
+                ingrediente_id=ing_req.ingrediente_id
             )
             db.add(plato_ingrediente)
 
@@ -488,9 +484,7 @@ def crear_ingrediente(
     # Crear el ingrediente
     nuevo_ingrediente = Ingrediente(
         nombre=request.nombre,
-        unidad_medida=request.unidad_medida,
-        stock_actual=request.stock_actual,
-        stock_minimo=request.stock_minimo
+        stock_actual=request.stock_actual
     )
 
     db.add(nuevo_ingrediente)

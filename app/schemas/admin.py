@@ -53,8 +53,6 @@ class MenuResponse(BaseModel):
 class IngredienteEnPlatoRequest(BaseModel):
     """Ingrediente que forma parte de un plato"""
     ingrediente_id: int = Field(..., description="ID del ingrediente")
-    cantidad_requerida: Decimal = Field(..., gt=0,
-                                        description="Cantidad que usa el plato")
 
 
 class CrearPlatoRequest(BaseModel):
@@ -87,8 +85,6 @@ class IngredienteEnPlatoResponse(BaseModel):
     """Response de ingrediente dentro de un plato (con cantidad)"""
     ingrediente_id: int
     nombre: str
-    cantidad_requerida: Decimal
-    unidad_medida: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -113,8 +109,6 @@ class CrearIngredienteRequest(BaseModel):
                         description="Nombre del ingrediente")
     stock_actual: Decimal = Field(default=Decimal(
         "0"), ge=0, description="Stock inicial")
-    unidad_medida: Optional[str] = Field(None, max_length=20, description="Unidad de medida (kg, lt, un)")
-    stock_minimo: Decimal = Field(default=Decimal("0"), ge=0, description="Stock mínimo para alertas")
 
 
 class IngredienteResponse(BaseModel):
