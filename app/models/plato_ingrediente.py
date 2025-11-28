@@ -1,4 +1,5 @@
 from sqlmodel import SQLModel, Field
+from decimal import Decimal
 
 
 class PlatoIngrediente(SQLModel, table=True):
