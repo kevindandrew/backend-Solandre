@@ -113,6 +113,8 @@ class CrearIngredienteRequest(BaseModel):
                         description="Nombre del ingrediente")
     stock_actual: Decimal = Field(default=Decimal(
         "0"), ge=0, description="Stock inicial")
+    unidad_medida: Optional[str] = Field(None, max_length=20, description="Unidad de medida (kg, lt, un)")
+    stock_minimo: Decimal = Field(default=Decimal("0"), ge=0, description="Stock mínimo para alertas")
 
 
 class IngredienteResponse(BaseModel):
